@@ -1,0 +1,41 @@
+ssh:
+  user: 'host_user'
+  identity_file: 'path/to/ssh_keys/id_rsa'
+  public_key_file: 'path/to/ssh_keys/id_rsa.pub'
+  proxy:
+    user: 'proxy_user'
+    host: 'proxy_host'
+
+cluster:
+  manager: 172.16.0.2
+  manager_docker_port: 2380
+  node_docker_port: 2380
+  consul_ip: 172.16.0.3
+  consul_port: 8500
+  network_name: default_network
+
+  nodes:
+    -
+      ip: 172.16.0.4
+      name: 'sgx-1'
+      network_if: 'enp0s31f6'
+      type: sgx
+      roles:
+        - sgx-worker
+    -
+      ip: 172.16.0.5
+      name: 'regular-1'
+      network_if: 'enp0s31f6'
+      type: regular
+      roles:
+        - regular-worker
+
+swarm:
+  image: swarm:1.2.5
+  strategy: spread
+
+poc:
+  working_dir: '/home/ubuntu/zmqrxlua'
+  project_name: 'zmqrxlua-poc'
+  experiment_path: 'experiment'
+  remote_repo: 'https://gitlab.securecloud.works/aurelien.havet/securestreams-poc'

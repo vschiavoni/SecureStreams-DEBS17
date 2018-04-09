@@ -1,0 +1,229 @@
+version: '2'
+
+services:
+  printer:
+    image: "${IMAGE}"
+    entrypoint: lua print-results.lua
+    environment:
+      - FROM=tcp://routerreduceprinter:5562
+      - OUTPUT=$RESULT_OUTPUT
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+
+    networks:
+      xp:
+        aliases:
+          - controller
+
+  routerreduceprinter:
+    image: "${IMAGE}"
+    hostname: routerreduceprinter
+    entrypoint: lua router.lua
+    environment:
+      - TO=tcp://*:5562
+      - FROM=tcp://*:5561
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  reduce:
+    image: "${IMAGE}"
+    entrypoint: lua reduce-events.lua
+    environment:
+      - TO=tcp://routerreduceprinter:5561
+      - FROM=tcp://routerfilterreduce:5560
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  reducesgx:
+    image: "${IMAGE_SGX}"
+    entrypoint: ./start.sh sgx-reduce-events.lua
+    environment:
+      - TO=tcp://routerreduceprinter:5561
+      - FROM=tcp://routerfilterreduce:5560
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+    devices:
+      - "/dev/isgx"
+
+  routerfilterreduce:
+    image: "${IMAGE}"
+    hostname: routerfilterreduce
+    entrypoint: lua router.lua
+    environment:
+      - TO=tcp://*:5560
+      - FROM=tcp://*:5559
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  filter:
+    image: "${IMAGE}"
+    entrypoint: lua filter-event.lua
+    environment:
+      - TO=tcp://routerfilterreduce:5559
+      - FROM=tcp://routermapperfilter:5558
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  filtersgx:
+    image: "${IMAGE_SGX}"
+    entrypoint: ./start.sh sgx-filter-event.lua
+    environment:
+      - TO=tcp://routerfilterreduce:5559
+      - FROM=tcp://routermapperfilter:5558
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+    devices:
+      - "/dev/isgx"
+
+  routermapperfilter:
+    image: "${IMAGE}"
+    hostname: routermapperfilter
+    entrypoint: lua router.lua
+    environment:
+      - TO=tcp://*:5558
+      - FROM=tcp://*:5557
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  mapper:
+    image: "${IMAGE}"
+    entrypoint: lua map-csv-to-event.lua
+    environment:
+      - TO=tcp://routermapperfilter:5557
+      - FROM=tcp://routerdatamapper:5556
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  mappersgx:
+    image: "${IMAGE_SGX}"
+    entrypoint: ./start.sh sgx-map-csv-to-event.lua
+    environment:
+      - TO=tcp://routermapperfilter:5557
+      - FROM=tcp://routerdatamapper:5556
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+    devices:
+      - "/dev/isgx"
+
+  routerdatamapper:
+    image: "${IMAGE}"
+    hostname: routerdatamapper
+    entrypoint: lua router.lua
+    environment:
+      - TO=tcp://*:5556
+      - FROM=tcp://*:5555
+      - "constraint:type==sgx"
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  data:
+    image: "${IMAGE}"
+    entrypoint: lua data-stream.lua
+    environment:
+      - TO=tcp://routerdatamapper:5555
+      - "constraint:type==sgx"
+      - DATA_FILE=data/sample.csv
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  data1:
+    image: "${IMAGE}"
+    entrypoint: lua data-stream.lua
+    environment:
+      - TO=tcp://routerdatamapper:5555
+      - "constraint:type==sgx"
+      - DATA_FILE=data/2005.csv
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  data2:
+    image: "${IMAGE}"
+    entrypoint: lua data-stream.lua
+    environment:
+      - TO=tcp://routerdatamapper:5555
+      - "constraint:type==sgx"
+      - DATA_FILE=data/2006.csv
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  data3:
+    image: "${IMAGE}"
+    entrypoint: lua data-stream.lua
+    environment:
+      - TO=tcp://routerdatamapper:5555
+      - "constraint:type==sgx"
+      - DATA_FILE=data/2007.csv
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+  data4:
+    image: "${IMAGE}"
+    entrypoint: lua data-stream.lua
+    environment:
+      - TO=tcp://routerdatamapper:5555
+      - "constraint:type==sgx"
+      - DATA_FILE=data/2008.csv
+    env_file: global.env
+    volumes:
+      - "${VOLUME}"
+    networks:
+      - xp
+
+
+networks:
+  xp:
+    external:
+      name: $NETWORK

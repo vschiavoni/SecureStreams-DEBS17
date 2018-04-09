@@ -1,0 +1,75 @@
+From aeb9e2dc16e197c6a99f073ae86a9172b33d31e7 Mon Sep 17 00:00:00 2001
+From: Lorel <lorel@wellatribe.com>
+Date: Thu, 2 Mar 2017 01:47:49 +0100
+Subject: [PATCH] patch
+
+---
+ linux/installer/bin/install-sgx-sdk.bin.tmpl | 45 +++-------------------------
+ 1 file changed, 4 insertions(+), 41 deletions(-)
+
+diff --git a/linux/installer/bin/install-sgx-sdk.bin.tmpl b/linux/installer/bin/install-sgx-sdk.bin.tmpl
+index da55ba4..fe93e27 100755
+--- a/linux/installer/bin/install-sgx-sdk.bin.tmpl
++++ b/linux/installer/bin/install-sgx-sdk.bin.tmpl
+@@ -33,44 +33,7 @@
+ set -e
+ 
+ PKG_NAME="Intel SGX SDK"
+-
+-select_install_path()
+-{
+-    USER_INPUT_PATH=$(pwd)
+-    echo
+-    echo -n "Do you want to install in current directory? [yes/no] : "
+-    read ANSWER
+-
+-    if [ "$ANSWER" == "yes" ]; then
+-        if [ ! -d "$USER_INPUT_PATH" ] || [ ! -w "$USER_INPUT_PATH" ]; then
+-            echo "Can not install in $USER_INPUT_PATH, please check the permission!"
+-            exit 4
+-        fi
+-    else
+-        echo
+-        echo -n "Please input the directory which you want to install in : "
+-        read USER_INPUT_PATH
+-
+-        eval USER_INPUT_PATH="$USER_INPUT_PATH"
+-
+-        if [ -d "$USER_INPUT_PATH" ]; then
+-            if [ ! -w "$USER_INPUT_PATH" ]; then
+-                echo "Can not install in $USER_INPUT_PATH, please check the permission!"
+-                exit 4
+-            fi
+-        else
+-            mkdir -p "$USER_INPUT_PATH"
+-            if [ "$?" != "0" ]; then
+-                echo "Can not install in $USER_INPUT_PATH, please check the permission!"
+-                exit 4
+-            fi
+-        fi
+-    fi
+-
+-    USER_INPUT_PATH=$(cd "$USER_INPUT_PATH"; pwd -P)
+-}
+-
+-select_install_path
++USER_INPUT_PATH="${INSTALL_PATH:-$(pwd)}"
+ 
+ PATH=/usr/bin:/bin
+ umask 022
+@@ -130,9 +93,9 @@ export_the_simulation()
+         rm -f ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/sdk_libs/libsgx_urts_sim.so
+         rm -f ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/sdk_libs/libsgx_uae_service_sim.so
+     fi
+-    ln -s ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/${LIB_DIR}/libsgx_urts_sim.so ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/sdk_libs/ 
+-    ln -s ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/${LIB_DIR}/libsgx_uae_service_sim.so ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/sdk_libs/ 
+-} 
++    ln -s ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/${LIB_DIR}/libsgx_urts_sim.so ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/sdk_libs/
++    ln -s ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/${LIB_DIR}/libsgx_uae_service_sim.so ${SGX_PACKAGES_PATH}/${SDK_PKG_NAME}/sdk_libs/
++}
+ 
+ generate_environment_script()
+ {
+-- 
+2.8.1
+
